@@ -32,9 +32,14 @@ GeneratedProgram ProgramGenerator::arithmetic(std::size_t c){
 }
 GeneratedProgram ProgramGenerator::algebra(std::size_t c){
  int a=pick(1,9),b=pick(1,15),x=pick(1,12);
- std::ostringstream s;s<<"10 REM GENERATED ALGEBRA EXERCISE\n20 PRINT \"SOLVE "<<a<<"*X+"<<b<<"\"\n30 PRINT \"WHAT IS THE VALUE WHEN X="<<x<<"?\"\n40 LET X = "<<x<<"\n50 LET Y = "<<a<<"*X+"<<b<<"\n60 PRINT \"Y=\";Y\n70 PRINT \"REARRANGED: X=(Y-"<<b<<")/"<<a<<"\"\n80 PRINT \"CHECK THE RESULT BY HAND\"\n90 END\n";
- for(std::size_t i=0;i<c;++i)s.insert(s.str().find("90 END"),"");
- return {"Algebra Lab","Linear equations and substitution using generated coefficients.",s.str()};
+ std::ostringstream s;
+ s<<"10 REM GENERATED ALGEBRA EXERCISE\n20 PRINT \"LINEAR EQUATION WORKSHOP\"\n"
+  <<"30 LET A = "<<a<<"\n40 LET B = "<<b<<"\n50 LET X = "<<x<<"\n"
+  <<"60 LET Y = A*X+B\n70 PRINT \"A*X+B=\";Y\n80 PRINT \"Y=A*X+B\"\n";
+ for(std::size_t i=0;i<c;++i)
+   s<<(90+10*i)<<" LET CHECK"<<i<<" = (Y-B)/A\n";
+ s<<(90+10*c)<<" PRINT \"RECONSTRUCTED X=\";(Y-B)/A\n"<<(100+10*c)<<" END\n";
+ return {"Algebra Lab","Linear equation substitution and inverse-operation checks.",s.str()};
 }
 GeneratedProgram ProgramGenerator::calculus(std::size_t c){
  int a=pick(1,8),b=pick(0,12),x=pick(1,7),h=pick(1,3);
