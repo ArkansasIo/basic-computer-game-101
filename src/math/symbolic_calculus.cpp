@@ -1,4 +1,6 @@
 #include "math/symbolic_calculus.hpp"
+#include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -10,11 +12,11 @@ namespace {
 using N=std::shared_ptr<ExprNode>;
 N node(NodeKind k,N a={},N b={},double v=0.0,std::string name={}){auto n=std::make_shared<ExprNode>();n->kind=k;n->left=std::move(a);n->right=std::move(b);n->value=v;n->name=std::move(name);return n;}
 N constant(double x){return node(NodeKind::Constant,{}, {},x);}
-N variable(std::string n){return node(NodeKind::Variable,{}, {},0,std::move(n));}
+N variableNode(std::string n){return node(NodeKind::Variable,{}, {},0,std::move(n));}
 bool isConst(const N& n,double v){return n&&n->kind==NodeKind::Constant&&std::abs(n->value-v)<1e-12;}
 N simplifyNode(const N& n){
  if(!n)return constant(0);
- N a=n->left? simplifyNode(n->left):N{}, b=n->right?simplifyNode(n->right):N{};
+ N a=n->left?simplifyNode(n->left):N{}, b=n->right?simplifyNode(n->right):N{};
  if(n->kind==NodeKind::Constant||n->kind==NodeKind::Variable)return node(n->kind,{}, {},n->value,n->name);
  if(n->kind==NodeKind::Negate){if(a&&a->kind==NodeKind::Constant)return constant(-a->value);if(a&&a->kind==NodeKind::Negate)return a->left;return node(n->kind,a);}
  if(a&&b&&a->kind==NodeKind::Constant&&b->kind==NodeKind::Constant){
@@ -22,11 +24,11 @@ N simplifyNode(const N& n){
   switch(n->kind){case NodeKind::Add:return constant(x+y);case NodeKind::Subtract:return constant(x-y);case NodeKind::Multiply:return constant(x*y);case NodeKind::Divide:if(y!=0)return constant(x/y);break;case NodeKind::Power:return constant(std::pow(x,y));default:break;}
  }
  switch(n->kind){
-  case NodeKind::Add: if(isConst(a,0))return b;if(isConst(b,0))return a;break;
-  case NodeKind::Subtract: if(isConst(b,0))return a;if(isConst(a,0))return node(NodeKind::Negate,b);if(a&&b&&a->kind==NodeKind::Variable&&b->kind==NodeKind::Variable&&a->name==b->name)return constant(0);break;
-  case NodeKind::Multiply: if(isConst(a,0)||isConst(b,0))return constant(0);if(isConst(a,1))return b;if(isConst(b,1))return a;break;
-  case NodeKind::Divide: if(isConst(a,0))return constant(0);if(isConst(b,1))return a;break;
-  case NodeKind::Power: if(isConst(b,0))return constant(1);if(isConst(b,1))return a;break;
+  case NodeKind::Add:if(isConst(a,0))return b;if(isConst(b,0))return a;break;
+  case NodeKind::Subtract:if(isConst(b,0))return a;if(isConst(a,0))return node(NodeKind::Negate,b);if(a&&b&&a->kind==NodeKind::Variable&&b->kind==NodeKind::Variable&&a->name==b->name)return constant(0);break;
+  case NodeKind::Multiply:if(isConst(a,0)||isConst(b,0))return constant(0);if(isConst(a,1))return b;if(isConst(b,1))return a;break;
+  case NodeKind::Divide:if(isConst(a,0))return constant(0);if(isConst(b,1))return a;break;
+  case NodeKind::Power:if(isConst(b,0))return constant(1);if(isConst(b,1))return a;break;
   default:break;
  }
  return node(n->kind,a,b,n->value,n->name);
@@ -91,7 +93,7 @@ struct Parser {
  N primary(){
   ws();if(take('(')){N n=expression();if(!take(')'))throw std::runtime_error("missing ')'");return n;}
   if(p<s.size()&&(std::isdigit(static_cast<unsigned char>(s[p]))||s[p]=='.')){std::size_t used=0;double v=std::stod(s.substr(p),&used);p+=used;return constant(v);}
-  if(p<s.size()&&std::isalpha(static_cast<unsigned char>(s[p]))){std::string n;while(p<s.size()&&(std::isalnum(static_cast<unsigned char>(s[p]))||s[p]=='_'))n+=s[p++];if(take('(')){N arg=expression();if(!take(')'))throw std::runtime_error("missing function ')'");if(n=="sin")return node(NodeKind::Sin,arg);if(n=="cos")return node(NodeKind::Cos,arg);if(n=="exp")return node(NodeKind::Exp,arg);if(n=="log")return node(NodeKind::Log,arg);throw std::runtime_error("unknown function: "+n);}return variable(n);}
+  if(p<s.size()&&std::isalpha(static_cast<unsigned char>(s[p]))){std::string n;while(p<s.size()&&(std::isalnum(static_cast<unsigned char>(s[p]))||s[p]=='_'))n+=s[p++];if(take('(')){N arg=expression();if(!take(')'))throw std::runtime_error("missing function ')'");if(n=="sin")return node(NodeKind::Sin,arg);if(n=="cos")return node(NodeKind::Cos,arg);if(n=="exp")return node(NodeKind::Exp,arg);if(n=="log")return node(NodeKind::Log,arg);throw std::runtime_error("unknown function: "+n);}return variableNode(n);}
   throw std::runtime_error("expected number, variable, or parenthesis");
  }
 };
@@ -99,15 +101,15 @@ struct Parser {
 Expression::Expression():root_(constant(0)){}
 Expression::Expression(double c):root_(constant(c)){}
 Expression::Expression(std::shared_ptr<ExprNode> n):root_(std::move(n)){}
-Expression Expression::variable(std::string n){return Expression(::retro::math::variable(std::move(n)));}
+Expression Expression::variable(std::string n){return Expression(variableNode(std::move(n)));}
 Expression Expression::parse(const std::string& s){Parser p{s};auto n=p.expression();p.ws();if(p.p!=s.size())throw std::runtime_error("unexpected token at "+std::to_string(p.p));return Expression(n);}
 std::string Expression::str()const{return render(root_);}
 double Expression::evaluate(const std::function<double(const std::string&)>& lookup)const{return eval(root_,lookup);}
 Expression Expression::simplify()const{return Expression(simplifyNode(root_));}
 Expression Expression::differentiate(const std::string& v)const{return Expression(simplifyNode(derivative(root_,v)));}
 double Expression::integrateNumeric(const std::string& v,double a,double b,std::size_t intervals,const std::function<double(const std::string&,double)>& setter)const{
- if(intervals<2)intervals=2;if(intervals%2)++intervals;double h=(b-a)/static_cast<double>(intervals);double total=0;
- for(std::size_t i=0;i<=intervals;++i){double x=a+h*i;double y=evaluate([&](const std::string& n){if(n==v)return x;return setter(n,x);});total+=(i==0||i==intervals?1:(i%2?4:2))*y;}
+ if(intervals<2)intervals=2;if(intervals%2)++intervals;double h=(b-a)/static_cast<double>(intervals),total=0;
+ for(std::size_t i=0;i<=intervals;++i){double x=a+h*i;double y=evaluate([&](const std::string& name){if(name==v)return x;return setter(name,x);});total+=(i==0||i==intervals?1:(i%2?4:2))*y;}
  return total*h/3.0;
 }
 }
