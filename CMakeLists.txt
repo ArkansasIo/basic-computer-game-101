@@ -12,13 +12,38 @@ add_executable(basicos
   src/cartridge/cartridge.cpp
 )
 target_include_directories(basicos PRIVATE include)
+
+add_executable(basicgen
+  tools/basicgen.cpp
+  src/generator/program_generator.cpp
+)
+target_include_directories(basicgen PRIVATE include)
+
+add_executable(generator_math_tests
+  tests/generator_math_tests.cpp
+  src/generator/program_generator.cpp
+  src/math/symbolic_calculus.cpp
+)
+target_include_directories(generator_math_tests PRIVATE include)
+
 if(MSVC)
-  target_compile_options(basicos PRIVATE /W4 /permissive-)
+  foreach(target basicos basicgen generator_math_tests)
+    target_compile_options(${target} PRIVATE /W4 /permissive-)
+  endforeach()
 else()
-  target_compile_options(basicos PRIVATE -Wall -Wextra -Wpedantic)
+  foreach(target basicos basicgen generator_math_tests)
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
+  endforeach()
 endif()
+
 enable_testing()
-add_executable(basicos_tests tests/smoke.cpp src/basic/interpreter.cpp src/cartridge/cartridge.cpp)
+add_executable(basicos_tests
+  tests/smoke.cpp
+  src/basic/interpreter.cpp
+  src/cartridge/cartridge.cpp
+)
 target_include_directories(basicos_tests PRIVATE include)
 add_test(NAME basicos_smoke COMMAND basicos_tests)
-install(TARGETS basicos RUNTIME DESTINATION bin)
+add_test(NAME generator_math_tests COMMAND generator_math_tests)
+
+install(TARGETS basicos basicgen RUNTIME DESTINATION bin)
