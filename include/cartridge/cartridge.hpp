@@ -1,9 +1,9 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>
-
 namespace retro {
 struct CartridgeImage {
     std::uint8_t version = 1;
