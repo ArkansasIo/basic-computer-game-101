@@ -30,7 +30,7 @@ add_executable(cpmbasic
 target_include_directories(cpmbasic PRIVATE include)
 target_link_libraries(cpmbasic PRIVATE basic2026)
 
-a dd_executable(basicgen
+add_executable(basicgen
   tools/basicgen.cpp
   src/generator/program_generator.cpp
 )
