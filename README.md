@@ -1,6 +1,6 @@
 # 101 BASIC Computer
 
-C++23 retro-computer project: line-numbered BASIC interpreter, CP/M-inspired disk command shell, 64 KiB memory abstraction, cartridge image format, algorithmic BASIC generator, and a host-side symbolic algebra/calculus engine.
+C++23 retro-computer project: line-numbered BASIC interpreter, BASIC 2026 runtime, CP/M-inspired disk command shell, CP/M BASIC console emulator, 64 KiB memory abstraction, cartridge image format, algorithmic BASIC generator, and a host-side symbolic algebra/calculus engine.
 
 This is an original implementation inspired by classic 8-bit computers; it does not bundle CP/M source code or copyrighted book listings.
 
@@ -14,7 +14,38 @@ ctest --test-dir build -C Release --output-on-failure
 
 Windows: run `build.bat`, then `run.bat`.
 
-At startup, choose `OS` or `BASIC`. The shell supports `HELP`, `DIR`, `TYPE`, `ERA`, `REN`, `SAVE`, `STAT`, `CARTLIST`, `CARTINFO`, `BASIC`, and `EXIT`.
+## CP/M BASIC console
+
+Build target: `cpmbasic`.
+
+Run it with:
+
+```sh
+./build/cpmbasic
+```
+
+The emulator provides a CP/M-style command processor with logical `A:` and `B:` drives and a resident BASIC environment.
+
+```text
+A:>DIR
+A:>BASIC
+10 PRINT "HELLO FROM CP/M"
+20 PRINT 2+2
+RUN
+EXIT
+A:>B:
+B:>HELP
+```
+
+Supported console commands include `DIR`, `TYPE`, `ERA`, `REN`, `USER`, `A:`, `B:`, `BASIC`, `HELP`, `VER`, and `EXIT`.
+
+See [docs/CPM_BASIC_CONSOLE.md](docs/CPM_BASIC_CONSOLE.md).
+
+## BASIC 2026
+
+BASIC 2026 adds a C++23 runtime/library layer with `Value`, `Environment`, `Program`, `StandardLibrary`, `Object`, `ClassRegistry`, and `BasicModule`. It is designed to support a future structured BASIC frontend and bytecode VM while preserving classic line-numbered BASIC compatibility.
+
+See [docs/BASIC_2026.md](docs/BASIC_2026.md).
 
 ## Generate new BASIC programs
 
