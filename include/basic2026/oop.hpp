@@ -1,7 +1,9 @@
 #pragma once
 #include "basic2026/core.hpp"
+#include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 namespace basic2026 {
