@@ -3,15 +3,12 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
-
 namespace retro {
 FileSystem::FileSystem(std::filesystem::path root):root_(std::filesystem::absolute(std::move(root)).lexically_normal()){std::filesystem::create_directories(root_);}
 std::filesystem::path FileSystem::safePath(const std::string& name) const {
-    std::filesystem::path rel(name);
-    if(rel.empty()||rel.is_absolute())throw std::invalid_argument("invalid filename");
+    std::filesystem::path rel(name);if(rel.empty()||rel.is_absolute())throw std::invalid_argument("invalid filename");
     for(const auto& part:rel)if(part==".."||part==".")throw std::invalid_argument("path traversal denied");
-    auto full=(root_/rel).lexically_normal();
-    auto base=root_.generic_string(),candidate=full.generic_string();
+    auto full=(root_/rel).lexically_normal();auto base=root_.generic_string(),candidate=full.generic_string();
     if(candidate.size()<base.size()||candidate.compare(0,base.size(),base)!=0||(candidate.size()>base.size()&&candidate[base.size()]!='/'))throw std::invalid_argument("path outside drive");
     return full;
 }
