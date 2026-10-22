@@ -1,0 +1,4 @@
+10 LET A = 19
+20 LET B = 23
+30 PRINT A+B
+40 END
