@@ -1,7 +1,6 @@
 #pragma once
 #include "os/filesystem.hpp"
 #include <string>
-
 namespace retro {
 class Shell {
 public:
